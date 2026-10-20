@@ -31,8 +31,9 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
                             {{ $loan->status == 'dipinjam' ? 'bg-blue-50 text-blue-700' : '' }}
-                            {{ $loan->status == 'terlambat' ? 'bg-red-50 text-red-700' : '' }}">
-                            {{ ucfirst($loan->status) }}
+                            {{ $loan->status == 'terlambat' ? 'bg-red-50 text-red-700' : '' }}
+                            {{ $loan->status == 'dikembalikan' ? 'bg-green-50 text-green-700' : '' }}">
+                            {{ $loan->status == 'dikembalikan' ? 'Dikembalikan' : ucfirst($loan->status) }}
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">

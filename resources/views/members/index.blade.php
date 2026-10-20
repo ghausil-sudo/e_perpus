@@ -37,8 +37,13 @@
                             {{ ucfirst($member->status) }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-3">
                         <a href="{{ route('members.edit', $member) }}" class="text-gray-900 hover:text-gray-700">Edit</a>
+                        <form action="{{ route('members.destroy', $member) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus anggota ini?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-600 hover:text-red-700">Hapus</button>
+                        </form>
                     </td>
                 </tr>
                 @empty

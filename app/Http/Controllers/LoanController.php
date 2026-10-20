@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Loan;
+use App\Models\History;
 use App\Models\Member;
 use App\Models\Loan_detail;
 use App\Models\Book;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class LoanController extends Controller
 {
@@ -33,7 +36,7 @@ class LoanController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'member_id' => 'required|exists:members,id',
             'tanggal_pinjam' => 'required|date',
             'tanggal_kembali' => 'required|date|after_or_equal:tanggal_pinjam',
@@ -44,28 +47,57 @@ class LoanController extends Controller
             'books.*.kondisi' => 'required|in:baik,rusak,hilang',
         ]);
 
-        $loan = Loan::create([
-            'kode_pinjam' => 'PJM-' . date('Ymd') . '-' . str_pad(Loan::count() + 1, 4, '0', STR_PAD_LEFT),
-            'member_id' => $request->member_id,
-            'user_id' => auth()->id(),
-            'tanggal_pinjam' => $request->tanggal_pinjam,
-            'tanggal_kembali' => $request->tanggal_kembali,
-            'catatan' => $request->catatan,
-            'status' => 'dipinjam',
-        ]);
+        DB::transaction(function () use ($data) {
+            $member = Member::whereKey($data['member_id'])->lockForUpdate()->firstOrFail();
 
-        foreach ($request->books as $item) {
-            Loan_detail::create([
-                'loan_id' => $loan->id,
-                'book_id' => $item['book_id'],
-                'jumlah' => $item['jumlah'],
-                'kondisi' => $item['kondisi'],
+            $hasActiveLoan = Loan::where('member_id', $data['member_id'])
+                ->whereIn('status', ['dipinjam', 'terlambat'])
+                ->exists();
+
+            if ($hasActiveLoan) {
+                throw ValidationException::withMessages([
+                    'member_id' => 'Anggota masih memiliki peminjaman aktif. Selesaikan pengembalian terlebih dahulu sebelum membuat peminjaman baru.',
+                ]);
+            }
+
+            $loan = Loan::create([
+                'kode_pinjam' => 'PJM-' . date('Ymd') . '-' . str_pad(Loan::count() + 1, 4, '0', STR_PAD_LEFT),
+                'member_id' => $data['member_id'],
+                'user_id' => auth()->id(),
+                'tanggal_pinjam' => $data['tanggal_pinjam'],
+                'tanggal_kembali' => $data['tanggal_kembali'],
+                'catatan' => $data['catatan'] ?? null,
+                'status' => 'dipinjam',
             ]);
 
-            $book = Book::findOrFail($item['book_id']);
-            $book->tersedia = max(0, $book->tersedia - $item['jumlah']);
-            $book->save();
-        }
+            $borrowedBooks = [];
+            foreach ($data['books'] as $item) {
+                Loan_detail::create([
+                    'loan_id' => $loan->id,
+                    'book_id' => $item['book_id'],
+                    'jumlah' => $item['jumlah'],
+                    'kondisi' => $item['kondisi'],
+                ]);
+
+                $book = Book::findOrFail($item['book_id']);
+                $book->tersedia = max(0, $book->tersedia - $item['jumlah']);
+                $book->save();
+                $borrowedBooks[] = $book->judul . ' (' . $item['jumlah'] . ')';
+            }
+
+            History::create([
+                'jenis' => 'peminjaman',
+                'judul' => 'Peminjaman buku',
+                'keterangan' => sprintf(
+                    '%s - anggota %s meminjam: %s. Batas kembali: %s.',
+                    $loan->kode_pinjam,
+                    $member->nama,
+                    implode(', ', $borrowedBooks),
+                    $loan->tanggal_kembali
+                ),
+                'user_id' => auth()->id(),
+            ]);
+        });
 
         return redirect()->route('loans.index')->with('success', 'Peminjaman berhasil dicatat.');
     }

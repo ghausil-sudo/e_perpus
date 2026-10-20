@@ -3,7 +3,20 @@
 @section('title', 'Login')
 
 @section('content')
-    <div class="mb-8 text-center">
+    @php
+        $logo = \App\Models\Setting::where('key', 'logo')->first();
+    @endphp
+
+    <div class="mb-8 flex flex-col items-center text-center">
+        @if($logo && $logo->value)
+            <img src="{{ asset('storage/' . $logo->value) }}" alt="Logo E-Perpus"
+                class="mb-4 h-16 w-16 object-contain rounded-full border border-gray-200 bg-white p-2 shadow-sm">
+        @else
+            <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-900 text-xl font-semibold text-white shadow-sm">
+                E
+            </div>
+        @endif
+
         <h1 class="text-2xl font-semibold tracking-tight">E-Perpus</h1>
         <p class="mt-2 text-sm text-gray-500">Sistem Manajemen Perpustakaan Digital</p>
     </div>

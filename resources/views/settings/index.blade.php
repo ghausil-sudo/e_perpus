@@ -29,7 +29,8 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="label">Denda Keterlambatan (per hari)</label>
-                    <input type="number" name="denda_per_hari" value="{{ old('denda_per_hari', $settings['denda_per_hari'] ?? 0) }}" min="0" required class="input">
+                    <input type="text" inputmode="numeric" name="denda_per_hari" value="{{ old('denda_per_hari', number_format((float) ($settings['denda_per_hari'] ?? 0), 0, ',', '.')) }}" pattern="[0-9.]+" required class="input">
+                    <p class="mt-1 text-xs text-gray-500">Masukkan nominal rupiah, contoh: 15.000</p>
                 </div>
                 <div>
                     <label class="label">Lama Pinjam (hari)</label>

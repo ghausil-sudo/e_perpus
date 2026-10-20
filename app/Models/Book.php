@@ -27,4 +27,9 @@ class Book extends Model
     {
         return $this->belongsTo(Shelf::class);
     }
+
+    public function loanDetails()
+    {
+        return $this->hasMany(Loan_detail::class);
+    }
 }

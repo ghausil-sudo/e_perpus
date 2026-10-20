@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FineController;
+use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\LoanController;
@@ -37,6 +39,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('loans', LoanController::class)->only(['index', 'create', 'store', 'show']);
     Route::get('returns', [ReturnController::class, 'index'])->name('returns.index');
     Route::post('returns/{loan}', [ReturnController::class, 'store'])->name('returns.store');
+    Route::get('fines', [FineController::class, 'index'])->name('fines.index');
+    Route::patch('fines/{fine}', [FineController::class, 'update'])->name('fines.update');
+    Route::get('histories', [HistoryController::class, 'index'])->name('histories.index');
+    Route::post('histories/expenses', [HistoryController::class, 'storeExpense'])->name('histories.expenses.store');
 
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class);

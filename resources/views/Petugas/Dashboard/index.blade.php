@@ -42,10 +42,10 @@
             <p class="text-xs text-gray-500 uppercase tracking-wider font-medium">Stok Tersedia</p>
             <h3 class="text-3xl font-light text-gray-900 mt-3">{{ $availableBooks ?? 0 }}</h3>
         </div>
-        <div class="card p-6">
+        <a href="{{ route('fines.index') }}" class="card p-6 hover:bg-gray-50 transition">
             <p class="text-xs text-red-500 uppercase tracking-wider font-medium">Denda Belum Lunas</p>
             <h3 class="text-3xl font-light text-gray-900 mt-3">{{ $unpaidFines ?? 0 }}</h3>
-        </div>
+        </a>
     </div>
 
     <div class="card p-6">

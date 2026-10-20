@@ -17,6 +17,7 @@
                     @endforeach
                 </select>
                 @error('member_id') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
+                <p class="mt-1 text-xs text-gray-500">Setiap anggota hanya dapat memiliki satu transaksi peminjaman aktif. Satu transaksi dapat berisi beberapa buku.</p>
             </div>
 
             <div class="grid grid-cols-2 gap-4">

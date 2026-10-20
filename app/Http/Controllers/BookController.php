@@ -6,6 +6,7 @@ use App\Models\Author;
 use App\Models\Publisher;
 use App\Models\Shelf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
@@ -79,17 +80,20 @@ class BookController extends Controller
             'deskripsi' => 'nullable|string',
         ]);
 
-        $data = $request->except('cover');
+        $data = $request->except(['_token', '_method', 'cover']);
+        $data['shelf_id'] = $request->filled('shelf_id') ? $request->shelf_id : null;
 
         if ($request->hasFile('cover')) {
-            if ($book->cover && \Storage::disk('public')->exists($book->cover)) {
-                \Storage::disk('public')->delete($book->cover);
+            if ($book->cover && Storage::disk('public')->exists($book->cover)) {
+                Storage::disk('public')->delete($book->cover);
             }
             $data['cover'] = $request->file('cover')->store('books', 'public');
+        } else {
+            $data['cover'] = $book->cover;
         }
 
-        $diff = $request->jumlah - $book->jumlah;
-        $data['tersedia'] = max(0, $book->tersedia + $diff);
+        $diff = (int) $request->jumlah - (int) $book->jumlah;
+        $data['tersedia'] = min((int) $request->jumlah, max(0, (int) $book->tersedia + $diff));
 
         $book->update($data);
 
@@ -98,8 +102,19 @@ class BookController extends Controller
 
     public function destroy(Book $book)
     {
-        if ($book->tersedia < $book->jumlah) {
-            return back()->with('error', 'Tidak dapat menghapus buku yang sedang dipinjam.');
+        $hasActiveLoan = $book->loanDetails()
+            ->whereHas('loan', function ($query) {
+                $query->whereNull('tanggal_dikembalikan')
+                    ->whereIn('status', ['dipinjam', 'terlambat']);
+            })
+            ->exists();
+
+        if ($hasActiveLoan) {
+            return back()->with('error', 'Tidak dapat menghapus buku karena masih ada peminjaman aktif.');
+        }
+
+        if ($book->cover && Storage::disk('public')->exists($book->cover)) {
+            Storage::disk('public')->delete($book->cover);
         }
 
         $book->delete();
