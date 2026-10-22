@@ -27,7 +27,7 @@
             --shadow-card-hover: 0 3px 8px rgba(16, 24, 40, .06), 0 12px 30px rgba(16, 24, 40, .09);
         }
         * { scrollbar-color: #cbd5e1 transparent; }
-        body { font-family: 'Inter', sans-serif; color: var(--color-text); background: var(--color-background); }
+        body { font-family: 'Inter', sans-serif; color: var(--color-text); background: var(--color-background); overflow-x: hidden; }
         .nav-link { position: relative; display: flex; align-items: center; padding: 0.65rem 0.75rem; font-size: 0.875rem; font-weight: 500; color: var(--color-muted); border-radius: 9px; transition: background-color .16s ease, color .16s ease, transform .16s ease; text-decoration: none; }
         .nav-link:hover { background-color: #f6f8fc; color: var(--color-text); }
         .nav-link.active { background-color: #eaf2ff; color: var(--color-primary); }

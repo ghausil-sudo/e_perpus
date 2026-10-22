@@ -28,7 +28,7 @@
                     <input type="hidden" name="member_id" value="{{ $selectedMemberId }}">
                 @endif
                 @error('member_id') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
-                <p class="mt-1 text-xs text-gray-500">Maksimal {{ $bookingBatch ? 3 : 2 }} buku berbeda per transaksi, masing-masing satu eksemplar.</p>
+                <p class="mt-1 text-xs text-gray-500">Maksimal {{ $maxBooks }} buku berbeda per transaksi, masing-masing satu eksemplar.</p>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -51,13 +51,13 @@
             @php
                 $loanBooks = $bookingBatch
                     ? $bookingBatch->map(fn ($booking) => ['book_id' => $booking->book_id, 'kondisi' => 'baik'])->all()
-                    : array_slice(old('books', [['book_id' => '', 'kondisi' => 'baik']]), 0, 2);
+                    : array_slice(old('books', [['book_id' => '', 'kondisi' => 'baik']]), 0, $maxBooks);
                 if ($loanBooks === []) {
                     $loanBooks = [['book_id' => '', 'kondisi' => 'baik']];
                 }
             @endphp
             <div>
-                <label class="label">Daftar Buku (maksimal {{ $bookingBatch ? 3 : 2 }} buku berbeda)</label>
+                <label class="label">Daftar Buku (maksimal {{ $maxBooks }} buku berbeda)</label>
                 <div id="book-list" class="space-y-4">
                     @foreach($loanBooks as $index => $loanBook)
                         <div class="book-item rounded-lg border border-gray-200 p-4">
@@ -94,7 +94,7 @@
                     @endforeach
                 </div>
                 @error('books') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
-                <button type="button" id="add-book-btn" class="btn btn-secondary mt-3 gap-2 text-sm" {{ $bookingBatch || count($loanBooks) >= 2 || $books->count() < 2 ? 'hidden' : '' }}>
+                <button type="button" id="add-book-btn" class="btn btn-secondary mt-3 gap-2 text-sm" {{ $bookingBatch || count($loanBooks) >= $maxBooks || $books->count() < 2 ? 'hidden' : '' }}>
                     <svg class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m-7-7h14"></path>
                     </svg>
@@ -128,7 +128,7 @@
                     return option.cloneNode(true);
                 });
             let nextBookIndex = {{ count($loanBooks) }};
-            const maxBooks = {{ $bookingBatch ? 3 : 2 }};
+            const maxBooks = {{ $maxBooks }};
             const lockedBookingBatch = @json((bool) $bookingBatch);
 
             function refreshBookChoices() {

@@ -13,17 +13,17 @@
         </div>
     @endif
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p class="text-sm text-gray-600">Booking maksimal tiga buku berbeda. Booking diproses setelah disetujui petugas.</p>
+        <p class="text-sm text-gray-600">Booking maksimal {{ $maxBooks }} buku berbeda. Booking diproses setelah disetujui petugas.</p>
         <form method="GET" class="flex w-full gap-2 sm:max-w-md">
             <input type="search" name="search" value="{{ request('search') }}" placeholder="Cari judul, kode, atau penulis..." class="input">
             <button type="submit" class="btn btn-secondary">Cari</button>
         </form>
     </div>
 
-    @if($activeBookingCount >= 3 || $hasActiveLoan)
+    @if($activeBookingCount >= $maxBooks || $hasActiveLoan)
         <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-            @if($activeBookingCount >= 3)
-                Anda sudah mencapai batas tiga booking aktif. Batalkan atau tunggu proses booking sebelum mengajukan booking lagi.
+            @if($activeBookingCount >= $maxBooks)
+                Anda sudah mencapai batas {{ $maxBooks }} booking aktif. Batalkan atau tunggu proses booking sebelum mengajukan booking lagi.
             @else
                 Anda masih memiliki peminjaman aktif. Kembalikan buku terlebih dahulu sebelum mengajukan booking baru.
             @endif
@@ -46,7 +46,7 @@
                     <form action="{{ route('member.booking.store', $book) }}" method="POST" class="mt-auto pt-5" onsubmit="return confirm('Ajukan booking untuk buku ini?')">
                         @csrf
                         @php($alreadyBooked = in_array((string) $book->id, array_map('strval', $activeBookIds), true))
-                        <button type="submit" class="btn {{ $book->tersedia > 0 && !$alreadyBooked && $activeBookingCount < 3 && !$hasActiveLoan ? 'btn-primary' : 'btn-secondary' }} w-full" {{ $book->tersedia < 1 || $alreadyBooked || $activeBookingCount >= 3 || $hasActiveLoan ? 'disabled' : '' }}>
+                        <button type="submit" class="btn {{ $book->tersedia > 0 && !$alreadyBooked && $activeBookingCount < $maxBooks && !$hasActiveLoan ? 'btn-primary' : 'btn-secondary' }} w-full" {{ $book->tersedia < 1 || $alreadyBooked || $activeBookingCount >= $maxBooks || $hasActiveLoan ? 'disabled' : '' }}>
                             {{ $book->tersedia < 1 ? 'Tidak Tersedia' : ($alreadyBooked ? 'Sudah Dibooking' : 'Booking Buku') }}
                         </button>
                     </form>

@@ -34,6 +34,7 @@ class LoanController extends Controller
     {
         $expireBookings->handle();
         $members = Member::where('status', 'aktif')->get();
+        $maxBooks = max(1, (int) (Setting::where('key', 'maksimal_buku_dipinjam')->value('value') ?? 3));
         $bookingBatch = null;
         $selectedMemberId = null;
 
@@ -55,7 +56,7 @@ class LoanController extends Controller
                 ->oldest()
                 ->get();
 
-            if ($bookingBatch->isEmpty() || $bookingBatch->count() > 3) {
+            if ($bookingBatch->isEmpty() || $bookingBatch->count() > $maxBooks) {
                 return redirect()->route('bookings.index')->with('error', 'Daftar booking anggota tidak valid. Periksa kembali booking yang disetujui.');
             }
         }
@@ -76,27 +77,23 @@ class LoanController extends Controller
             'tanggalPinjam',
             'tanggalKembali',
             'bookingBatch',
-            'selectedMemberId'
+            'selectedMemberId',
+            'maxBooks'
         ));
     }
 
     public function store(Request $request)
     {
+        $maxBooks = max(1, (int) (Setting::where('key', 'maksimal_buku_dipinjam')->value('value') ?? 3));
         $data = $request->validate([
             'member_id' => 'required|exists:members,id',
             'catatan' => 'nullable|string',
-            'booking_ids' => 'nullable|array|min:1|max:3',
+            'booking_ids' => 'nullable|array|min:1|max:'.$maxBooks,
             'booking_ids.*' => 'required|integer|distinct|exists:bookings,id',
-            'books' => 'required|array|min:1|max:3',
+            'books' => 'required|array|min:1|max:'.$maxBooks,
             'books.*.book_id' => 'required|integer|distinct|exists:books,id',
             'books.*.kondisi' => 'required|in:baik,rusak,hilang',
         ]);
-
-        if (empty($data['booking_ids']) && count($data['books']) > 2) {
-            throw ValidationException::withMessages([
-                'books' => 'Peminjaman langsung maksimal dua buku berbeda.',
-            ]);
-        }
 
         $attempt = 0;
         do {

@@ -36,6 +36,11 @@
                     <label class="label">Lama Pinjam (hari)</label>
                     <input type="number" name="lama_pinjam" value="{{ old('lama_pinjam', $settings['lama_pinjam'] ?? 7) }}" min="1" required class="input">
                 </div>
+                <div>
+                    <label class="label">Maksimal Buku per Peminjaman</label>
+                    <input type="number" name="maksimal_buku_dipinjam" value="{{ old('maksimal_buku_dipinjam', $settings['maksimal_buku_dipinjam'] ?? 3) }}" min="1" required class="input">
+                    @error('maksimal_buku_dipinjam') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
             </div>
             <div class="border-t border-gray-100 pt-5">
                 <h2 class="text-sm font-semibold text-gray-900">Tarif Denda Kondisi Buku</h2>

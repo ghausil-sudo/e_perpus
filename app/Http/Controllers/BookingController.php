@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Book;
 use App\Models\Loan;
 use App\Models\Member;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\ExpireBookings;
 use Illuminate\Http\Request;
@@ -32,15 +33,20 @@ class BookingController extends Controller
             if (Loan::where('member_id', $member->id)->whereIn('status', ['dipinjam', 'terlambat'])->exists()) {
                 throw ValidationException::withMessages(['booking' => 'Selesaikan peminjaman aktif sebelum mengajukan booking.']);
             }
+            $maxBooks = max(1, (int) (Setting::where('key', 'maksimal_buku_dipinjam')->value('value') ?? 3));
             $activeBookings = Booking::where('member_id', $member->id)
                 ->whereIn('status', ['menunggu', 'disetujui']);
-            if ($activeBookings->count() >= 3) {
-                throw ValidationException::withMessages(['booking' => 'Anda hanya dapat memiliki maksimal tiga booking aktif.']);
+            if ($activeBookings->count() >= $maxBooks) {
+                throw ValidationException::withMessages(['booking' => 'Anda hanya dapat memiliki maksimal '.$maxBooks.' booking aktif.']);
             }
             if ($activeBookings->where('book_id', $book->id)->exists()) {
                 throw ValidationException::withMessages(['booking' => 'Buku ini sudah ada dalam booking aktif Anda.']);
             }
-            if ($book->tersedia < 1) {
+
+            $pendingBookings = Booking::where('book_id', $book->id)
+                ->where('status', 'menunggu')
+                ->count();
+            if ($book->tersedia - $pendingBookings < 1) {
                 throw ValidationException::withMessages(['booking' => 'Buku ini sedang tidak tersedia.']);
             }
 

@@ -116,7 +116,7 @@ class MemberBookingFlowTest extends TestCase
             ->assertRedirect(route('member.bookings'));
         $this->get(route('member.books'))
             ->assertOk()
-            ->assertSee('sudah mencapai batas tiga booking aktif')
+            ->assertSee('sudah mencapai batas 3 booking aktif')
             ->assertSee('Sudah Dibooking');
         $fourthBook = $this->createBook(1);
         $this->post(route('member.booking.store', $fourthBook))
@@ -179,6 +179,41 @@ class MemberBookingFlowTest extends TestCase
         $this->assertSame(1, (int) $book->fresh()->tersedia);
         $this->assertSame(0, (int) $anotherBook->fresh()->tersedia);
         $this->assertSame(0, (int) $thirdBook->fresh()->tersedia);
+    }
+
+    public function test_member_booking_limit_uses_the_configured_loan_limit(): void
+    {
+        Setting::create(['key' => 'maksimal_buku_dipinjam', 'value' => '2']);
+        $memberAccount = $this->registerMember($this->createMember());
+        $firstBook = $this->createBook(1);
+        $secondBook = $this->createBook(1);
+        $thirdBook = $this->createBook(1);
+
+        $this->actingAs($memberAccount)
+            ->get(route('member.books'))
+            ->assertOk()
+            ->assertSee('Booking maksimal 2 buku berbeda');
+
+        $this->post(route('member.booking.store', $firstBook))->assertRedirect(route('member.bookings'));
+        $this->post(route('member.booking.store', $secondBook))->assertRedirect(route('member.bookings'));
+        $this->post(route('member.booking.store', $thirdBook))->assertSessionHasErrors('booking');
+        $this->assertSame(2, Booking::where('member_id', $memberAccount->member_id)
+            ->whereIn('status', ['menunggu', 'disetujui'])
+            ->count());
+    }
+
+    public function test_pending_booking_reduces_visible_stock_for_members(): void
+    {
+        $member = $this->createMember();
+        $book = $this->createBook(2);
+        $memberAccount = $this->registerMember($member);
+
+        $this->actingAs($memberAccount)->post(route('member.booking.store', $book));
+
+        $response = $this->actingAs($memberAccount)->get(route('member.books'));
+        $response->assertOk()->assertSee('Tersedia: 1');
+        $this->assertSame(2, (int) $book->fresh()->tersedia);
+        $this->assertCount(1, Booking::where('book_id', $book->id)->where('status', 'menunggu')->get());
     }
 
     public function test_approved_booking_releases_held_stock_after_24_hours(): void

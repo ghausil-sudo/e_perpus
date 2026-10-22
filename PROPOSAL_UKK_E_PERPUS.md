@@ -250,7 +250,7 @@ Dalam proses booking, anggota dapat memiliki paling banyak tiga booking aktif. S
 | F-05 | Sistem menampilkan katalog dan mendukung pencarian buku berdasarkan judul, kode buku, atau penulis. |
 | F-06 | Anggota yang telah terhubung dapat membuat dan membatalkan booking sesuai status dan batas booking aktif. |
 | F-07 | Admin atau petugas dapat menyetujui atau menolak booking. Sistem menahan stok untuk booking yang disetujui dan menetapkan masa berlaku 24 jam. |
-| F-08 | Petugas dapat mencatat peminjaman anggota aktif, memeriksa ketersediaan buku, dan menetapkan tanggal kembali berdasarkan lama pinjam yang dikonfigurasi. |
+| F-08 | Petugas dapat mencatat peminjaman anggota aktif sampai batas jumlah buku yang dikonfigurasi, memeriksa ketersediaan buku, dan menetapkan tanggal kembali berdasarkan lama pinjam yang dikonfigurasi. |
 | F-09 | Sistem mengurangi stok tersedia saat peminjaman atau booking disetujui, sesuai alur transaksi. |
 | F-10 | Petugas dapat mencatat pengembalian dan kondisi setiap buku. |
 | F-11 | Sistem menghitung denda keterlambatan, kerusakan, atau kehilangan berdasarkan tarif yang dikonfigurasi; stok disesuaikan dengan kondisi buku. |

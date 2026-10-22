@@ -71,6 +71,7 @@ class LoanControllerTest extends TestCase
             ]);
         });
         Setting::create(['key' => 'lama_pinjam', 'value' => '10']);
+        Setting::create(['key' => 'maksimal_buku_dipinjam', 'value' => '2']);
         Loan::create([
             'kode_pinjam' => 'PJM-' . today()->format('Ymd') . '-0012',
             'member_id' => $member->id,

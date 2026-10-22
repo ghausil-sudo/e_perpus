@@ -50,6 +50,7 @@ class SettingController extends Controller
             'denda_rusak_berat' => 'required|numeric|min:0',
             'denda_hilang' => 'required|numeric|min:0',
             'lama_pinjam' => 'required|integer|min:1',
+            'maksimal_buku_dipinjam' => 'required|integer|min:1',
             'logo' => 'nullable|image|max:2048',
         ]);
 

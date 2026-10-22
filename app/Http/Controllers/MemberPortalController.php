@@ -37,7 +37,9 @@ class MemberPortalController extends Controller
             return redirect()->route('member.dashboard')->with('error', 'Akun Anda masih menunggu dihubungkan ke data anggota oleh petugas.');
         }
 
+        $maxBooks = max(1, (int) (Setting::where('key', 'maksimal_buku_dipinjam')->value('value') ?? 3));
         $books = Book::with(['category', 'author'])
+            ->withCount(['bookings as pending_booking_count' => fn ($query) => $query->where('status', 'menunggu')])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->string('search')->toString();
                 $query->where(function ($subQuery) use ($search) {
@@ -50,6 +52,10 @@ class MemberPortalController extends Controller
             ->paginate(12)
             ->withQueryString();
 
+        foreach ($books as $book) {
+            $book->tersedia = max(0, (int) $book->tersedia - (int) $book->pending_booking_count);
+        }
+
         $activeBookings = Booking::where('member_id', $member->id)
             ->whereIn('status', ['menunggu', 'disetujui'])
             ->get(['book_id']);
@@ -59,7 +65,7 @@ class MemberPortalController extends Controller
             ->whereIn('status', ['dipinjam', 'terlambat'])
             ->exists();
 
-        return view('member.books', compact('books', 'activeBookingCount', 'activeBookIds', 'hasActiveLoan'));
+        return view('member.books', compact('books', 'activeBookingCount', 'activeBookIds', 'hasActiveLoan', 'maxBooks'));
     }
 
     public function bookings(ExpireBookings $expireBookings)

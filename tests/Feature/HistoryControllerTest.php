@@ -23,6 +23,7 @@ class HistoryControllerTest extends TestCase
             'telepon' => '08123456789',
             'email' => 'perpus@example.com',
             'lama_pinjam' => 7,
+            'maksimal_buku_dipinjam' => 3,
             'denda_rusak_ringan' => '5.000',
             'denda_rusak_berat' => '10.000',
             'denda_hilang' => '20.000',
@@ -52,6 +53,14 @@ class HistoryControllerTest extends TestCase
             'key' => 'denda_hilang',
             'value' => '20000',
         ]);
+        $this->assertDatabaseHas('settings', [
+            'key' => 'maksimal_buku_dipinjam',
+            'value' => '3',
+        ]);
+        $this->get(route('settings.index'))
+            ->assertOk()
+            ->assertSee('Maksimal Buku per Peminjaman')
+            ->assertSee('name="maksimal_buku_dipinjam"', false);
         $this->assertDatabaseHas('histories', [
             'jenis' => 'perubahan_tarif_denda',
             'nilai_lama' => '10000',
