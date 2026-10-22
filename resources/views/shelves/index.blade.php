@@ -31,11 +31,13 @@
                     <td class="px-6 py-4 text-sm text-gray-700">{{ $shelf->lokasi ?? '-' }}</td>
                     <td class="px-6 py-4 text-sm text-gray-700 capitalize">{{ $shelf->tipe }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <a href="{{ route('shelves.edit', $shelf) }}" class="text-gray-900 hover:text-gray-700 mr-3">Edit</a>
-                        <form action="{{ route('shelves.destroy', $shelf) }}" method="POST" class="inline" onsubmit="return confirm('Hapus rak ini?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-800">Hapus</button>
-                        </form>
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="{{ route('shelves.edit', $shelf) }}" class="btn-action btn-action--primary">Edit</a>
+                            <form action="{{ route('shelves.destroy', $shelf) }}" method="POST" class="inline" onsubmit="return confirm('Hapus rak ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn-action btn-action--danger">Hapus</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty

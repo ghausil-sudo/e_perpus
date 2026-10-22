@@ -5,9 +5,9 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex items-center justify-between">
-        <form method="GET" class="flex items-center">
-            <select name="status" onchange="this.form.submit()" class="input max-w-xs">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <form method="GET" class="w-full sm:w-44">
+            <select name="status" onchange="this.form.submit()" class="input" data-select2="false">
                 <option value="dipinjam" {{ ($status ?? 'dipinjam') == 'dipinjam' ? 'selected' : '' }}>Dipinjam</option>
                 <option value="dikembalikan" {{ ($status ?? 'dipinjam') == 'dikembalikan' ? 'selected' : '' }}>Dikembalikan</option>
                 <option value="terlambat" {{ ($status ?? 'dipinjam') == 'terlambat' ? 'selected' : '' }}>Terlambat</option>

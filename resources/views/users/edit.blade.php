@@ -42,8 +42,26 @@
                     <select name="role" required class="input">
                         <option value="petugas" {{ old('role', $user->role) == 'petugas' ? 'selected' : '' }}>Petugas</option>
                         <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
+                        @if($user->role === 'user')
+                            <option value="user" selected>Anggota</option>
+                        @endif
                     </select>
                 </div>
+                @if($user->role === 'user')
+                <div>
+                    <label class="label">Hubungkan ke Data Anggota</label>
+                    <select name="member_id" class="input">
+                        <option value="">Menunggu verifikasi petugas</option>
+                        @foreach($members as $member)
+                            <option value="{{ $member->id }}" {{ (string) old('member_id', $user->member_id) === (string) $member->id ? 'selected' : '' }}>
+                                {{ $member->kode_member }} - {{ $member->nama }} ({{ $member->email }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Hanya anggota dengan kode dan email yang cocok dengan data pendaftaran yang dapat dipilih. Kode yang didaftarkan: {{ $user->member_code ?? $user->member->kode_member }}</p>
+                    @error('member_id') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+                @endif
                 <div>
                     <label class="label">Foto</label>
                     <input type="file" name="foto" class="input">

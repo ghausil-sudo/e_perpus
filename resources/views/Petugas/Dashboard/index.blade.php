@@ -29,7 +29,7 @@
         </a>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="dashboard-stat-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="card p-6">
             <p class="text-xs text-gray-500 uppercase tracking-wider font-medium">Buku Dipinjam</p>
             <h3 class="text-3xl font-light text-gray-900 mt-3">{{ $activeLoans ?? 0 }}</h3>

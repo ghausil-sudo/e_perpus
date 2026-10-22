@@ -18,19 +18,16 @@ class MemberController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'nama' => 'required|string|max:255',
-            'nis_nip' => 'nullable|string',
+            'nis_nip' => 'nullable|string|max:255',
             'jenis_kelamin' => 'required|in:L,P',
-            'alamat' => 'required|string',
-            'telepon' => 'required|string',
-            'email' => 'nullable|email',
+            'alamat' => 'required|string|max:255',
+            'telepon' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
         ]);
 
-        $kode = 'MBR-' . date('Ymd') . '-' . str_pad(Member::count() + 1, 4, '0', STR_PAD_LEFT);
-
-        Member::create(array_merge($request->all(), [
-            'kode_member' => $kode,
+        Member::createWithGeneratedCode(array_merge($data, [
             'tanggal_daftar' => today(),
             'status' => 'aktif'
         ]));
@@ -52,6 +49,10 @@ class MemberController extends Controller
 
     public function destroy(Member $member)
     {
+        if ($member->bookings()->whereIn('status', ['menunggu', 'disetujui'])->exists()) {
+            return back()->with('error', 'Tidak dapat menghapus anggota karena masih memiliki booking aktif.');
+        }
+
         if ($member->loans()->exists()) {
             return back()->with('error', 'Tidak dapat menghapus anggota karena memiliki riwayat peminjaman.');
         }

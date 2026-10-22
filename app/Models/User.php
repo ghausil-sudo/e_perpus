@@ -24,6 +24,12 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'member_id',
+        'member_code',
+        'member_nis_nip',
+        'member_jenis_kelamin',
+        'member_alamat',
+        'member_telepon',
         'foto',
     ];
 
@@ -58,5 +64,10 @@ class User extends Authenticatable
     public function returns()
     {
         return $this->hasMany(BookReturn::class);
+    }
+
+    public function member()
+    {
+        return $this->belongsTo(Member::class);
     }
 }

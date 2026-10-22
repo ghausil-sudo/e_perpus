@@ -24,6 +24,99 @@ class ReturnControllerTest extends TestCase
 
     public function test_it_prevents_duplicate_returns_and_creates_fine_for_late_return(): void
     {
+        [$user, $book, $loan, $detail] = $this->makeLoanForReturn();
+
+        Setting::create(['key' => 'denda_per_hari', 'value' => 1000]);
+        Setting::create(['key' => 'denda_rusak_ringan', 'value' => 2500]);
+        Setting::create(['key' => 'denda_rusak_berat', 'value' => 5000]);
+        Setting::create(['key' => 'denda_hilang', 'value' => 10000]);
+
+        $this->actingAs($user);
+
+        $response = $this->post(route('returns.store', $loan), [
+            'tanggal_kembali' => now()->toDateString(),
+            'catatan' => 'Kembali tepat waktu',
+            'conditions' => [$detail->id => 'rusak_ringan'],
+        ]);
+
+        $response->assertRedirect(route('returns.index'));
+
+        $loan->refresh();
+        $book->refresh();
+
+        $this->assertSame('dikembalikan', $loan->status);
+        $this->assertSame(1, $book->tersedia);
+        $this->assertSame(1, BookReturn::where('loan_id', $loan->id)->count());
+        $this->assertSame(2, (int) BookReturn::where('loan_id', $loan->id)->value('terlambat_hari'));
+        $this->assertSame(4500.0, (float) BookReturn::where('loan_id', $loan->id)->value('denda'));
+        $this->assertSame('rusak_ringan', Loan_detail::where('loan_id', $loan->id)->value('kondisi_kembali'));
+        $this->assertDatabaseHas('histories', [
+            'jenis' => 'pengembalian',
+            'user_id' => $user->id,
+        ]);
+        $this->assertDatabaseHas('fines', [
+            'loan_id' => $loan->id,
+            'jumlah' => 2000,
+            'status' => 'belum_bayar',
+        ]);
+        $this->assertDatabaseHas('fines', [
+            'loan_id' => $loan->id,
+            'jumlah' => 2500,
+            'keterangan' => 'Denda kerusakan ringan',
+            'status' => 'belum_bayar',
+        ]);
+        $this->assertSame(4500.0, (float) Fine::where('loan_id', $loan->id)->sum('jumlah'));
+        $fine = Fine::where('loan_id', $loan->id)->firstOrFail();
+        $this->assertSame(0, History::where('jenis', 'kas_masuk')->count());
+
+        $this->patch(route('fines.update', $fine))->assertRedirect(route('fines.index'));
+        $this->assertDatabaseHas('histories', [
+            'jenis' => 'kas_masuk',
+            'fine_id' => $fine->id,
+            'jumlah' => $fine->jumlah,
+        ]);
+        $this->patch(route('fines.update', $fine));
+        $this->assertSame(1, History::where('jenis', 'kas_masuk')->where('fine_id', $fine->id)->count());
+
+        $secondResponse = $this->post(route('returns.store', $loan), [
+            'tanggal_kembali' => now()->toDateString(),
+        ]);
+
+        $secondResponse->assertRedirect();
+        $secondResponse->assertSessionHas('error', 'Peminjaman ini sudah dikembalikan.');
+        $this->assertSame(1, $book->fresh()->tersedia);
+        $this->assertSame(1, BookReturn::where('loan_id', $loan->id)->count());
+    }
+
+    public function test_lost_books_create_configured_fine_and_reduce_total_stock(): void
+    {
+        [$user, $book, $loan, $detail] = $this->makeLoanForReturn();
+        Setting::create(['key' => 'denda_per_hari', 'value' => 0]);
+        Setting::create(['key' => 'denda_rusak_ringan', 'value' => 2500]);
+        Setting::create(['key' => 'denda_rusak_berat', 'value' => 5000]);
+        Setting::create(['key' => 'denda_hilang', 'value' => 10000]);
+
+        $this->actingAs($user)
+            ->post(route('returns.store', $loan), [
+                'tanggal_kembali' => now()->toDateString(),
+                'conditions' => [$detail->id => 'hilang'],
+            ])
+            ->assertRedirect(route('returns.index'));
+
+        $this->assertSame(1, (int) $book->fresh()->jumlah);
+        $this->assertSame(1, (int) $book->fresh()->tersedia);
+        $this->assertSame('hilang', $detail->fresh()->kondisi_kembali);
+        $this->assertDatabaseHas('fines', [
+            'loan_id' => $loan->id,
+            'jumlah' => 10000,
+            'keterangan' => 'Denda kehilangan',
+            'status' => 'belum_bayar',
+        ]);
+        $this->assertSame(10000.0, (float) BookReturn::where('loan_id', $loan->id)->value('denda'));
+    }
+
+    private function makeLoanForReturn(): array
+    {
         $user = User::factory()->create(['role' => 'petugas']);
         $member = Member::create([
             'kode_member' => 'M001',
@@ -35,7 +128,6 @@ class ReturnControllerTest extends TestCase
             'tanggal_daftar' => now()->toDateString(),
             'status' => 'aktif',
         ]);
-
         $category = Category::create([
             'kode_kategori' => 'CTG001',
             'nama_kategori' => 'Programming',
@@ -58,7 +150,6 @@ class ReturnControllerTest extends TestCase
             'nama_rak' => 'A1',
             'lokasi' => 'Lantai 1',
         ]);
-
         $book = Book::create([
             'kode_buku' => 'BK001',
             'judul' => 'Laravel Basics',
@@ -70,7 +161,6 @@ class ReturnControllerTest extends TestCase
             'jumlah' => 2,
             'tersedia' => 1,
         ]);
-
         $loan = Loan::create([
             'kode_pinjam' => 'PJM-001',
             'member_id' => $member->id,
@@ -79,62 +169,13 @@ class ReturnControllerTest extends TestCase
             'tanggal_kembali' => now()->subDays(2)->toDateString(),
             'status' => 'dipinjam',
         ]);
-
-        Loan_detail::create([
+        $detail = Loan_detail::create([
             'loan_id' => $loan->id,
             'book_id' => $book->id,
             'jumlah' => 1,
             'kondisi' => 'baik',
         ]);
 
-        Setting::create(['key' => 'denda_per_hari', 'value' => 1000]);
-
-        $this->actingAs($user);
-
-        $response = $this->post(route('returns.store', $loan), [
-            'tanggal_kembali' => now()->toDateString(),
-            'catatan' => 'Kembali tepat waktu',
-        ]);
-
-        $response->assertRedirect(route('returns.index'));
-
-        $loan->refresh();
-        $book->refresh();
-
-        $this->assertSame('dikembalikan', $loan->status);
-        $this->assertSame(2, $book->tersedia);
-        $this->assertSame(1, BookReturn::where('loan_id', $loan->id)->count());
-        $this->assertSame(2, (int) BookReturn::where('loan_id', $loan->id)->value('terlambat_hari'));
-        $this->assertSame(2000.0, (float) BookReturn::where('loan_id', $loan->id)->value('denda'));
-        $this->assertDatabaseHas('histories', [
-            'jenis' => 'pengembalian',
-            'user_id' => $user->id,
-        ]);
-        $this->assertDatabaseHas('fines', [
-            'loan_id' => $loan->id,
-            'jumlah' => 2000,
-            'status' => 'belum_bayar',
-        ]);
-        $this->assertSame(2000.0, (float) Fine::where('loan_id', $loan->id)->value('jumlah'));
-        $fine = Fine::where('loan_id', $loan->id)->firstOrFail();
-        $this->assertSame(0, History::where('jenis', 'kas_masuk')->count());
-
-        $this->patch(route('fines.update', $fine))->assertRedirect(route('fines.index'));
-        $this->assertDatabaseHas('histories', [
-            'jenis' => 'kas_masuk',
-            'fine_id' => $fine->id,
-            'jumlah' => 2000,
-        ]);
-        $this->patch(route('fines.update', $fine));
-        $this->assertSame(1, History::where('jenis', 'kas_masuk')->where('fine_id', $fine->id)->count());
-
-        $secondResponse = $this->post(route('returns.store', $loan), [
-            'tanggal_kembali' => now()->toDateString(),
-        ]);
-
-        $secondResponse->assertRedirect();
-        $secondResponse->assertSessionHas('error', 'Peminjaman ini sudah dikembalikan.');
-        $this->assertSame(2, $book->fresh()->tersedia);
-        $this->assertSame(1, BookReturn::where('loan_id', $loan->id)->count());
+        return [$user, $book, $loan, $detail];
     }
 }

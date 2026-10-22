@@ -29,13 +29,22 @@
                     <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ $user->name }}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">{{ $user->email }}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">{{ $user->username }}</td>
-                    <td class="px-6 py-4 text-sm text-gray-700 capitalize">{{ $user->role }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">
+                        <span class="capitalize">{{ $user->role }}</span>
+                        @if($user->role === 'user' && !$user->member_id)
+                            <div class="mt-1 text-xs font-medium text-amber-700">Menunggu verifikasi · {{ $user->member_code }}</div>
+                        @elseif($user->role === 'user')
+                            <div class="mt-1 text-xs text-gray-500">{{ $user->member->kode_member ?? '' }}</div>
+                        @endif
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <a href="{{ route('users.edit', $user) }}" class="text-gray-900 hover:text-gray-700 mr-3">Edit</a>
-                        <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Hapus pengguna ini?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-800" {{ $user->id == auth()->id() ? 'disabled' : '' }}>Hapus</button>
-                        </form>
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="{{ route('users.edit', $user) }}" class="btn-action btn-action--primary">Edit</a>
+                            <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Hapus pengguna ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn-action btn-action--danger" {{ $user->id == auth()->id() ? 'disabled' : '' }}>Hapus</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty

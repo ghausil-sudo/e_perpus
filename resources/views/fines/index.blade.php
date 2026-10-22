@@ -38,7 +38,7 @@
                             <form action="{{ route('fines.update', $fine) }}" method="POST" class="inline" onsubmit="return confirm('Tandai denda ini sebagai lunas?')">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="text-gray-900 hover:text-gray-700 font-medium">Bayar</button>
+                                <button type="submit" class="btn-action btn-action--primary">Bayar</button>
                             </form>
                         @else
                             <span class="text-gray-400">-</span>

@@ -2,14 +2,54 @@
 namespace App\Http\Controllers;
 
 use App\Models\History;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
     public function showLogin()
     {
         return view('auth.login');
+    }
+
+    public function showRegister()
+    {
+        return view('auth.register');
+    }
+
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'nis_nip' => 'nullable|string|max:255',
+            'jenis_kelamin' => 'required|in:L,P',
+            'alamat' => 'required|string|max:255',
+            'telepon' => 'required|string|max:255',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $data['email'] = strtolower($data['email']);
+
+        $user = User::create([
+            'name' => $data['name'],
+            'username' => $data['username'],
+            'email' => $data['email'],
+            'member_nis_nip' => $data['nis_nip'] ?? null,
+            'member_jenis_kelamin' => $data['jenis_kelamin'],
+            'member_alamat' => $data['alamat'],
+            'member_telepon' => $data['telepon'],
+            'password' => Hash::make($data['password']),
+            'role' => 'user',
+        ]);
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return redirect()->route('dashboard')->with('success', 'Akun berhasil dibuat. Petugas akan memverifikasi data Anda dan membuat kode anggota sebelum booking dapat dilakukan.');
     }
 
     public function login(Request $request)

@@ -23,6 +23,9 @@ class HistoryControllerTest extends TestCase
             'telepon' => '08123456789',
             'email' => 'perpus@example.com',
             'lama_pinjam' => 7,
+            'denda_rusak_ringan' => '5.000',
+            'denda_rusak_berat' => '10.000',
+            'denda_hilang' => '20.000',
         ];
 
         $this->post(route('settings.store'), $settings + ['denda_per_hari' => '10.000'])
@@ -30,10 +33,24 @@ class HistoryControllerTest extends TestCase
         $this->post(route('settings.store'), $settings + ['denda_per_hari' => '15.000'])
             ->assertRedirect(route('settings.index'));
 
-        $this->assertSame(2, History::where('jenis', 'perubahan_tarif_denda')->count());
+        $this->assertSame(2, History::where('jenis', 'perubahan_tarif_denda')
+            ->where('keterangan', 'Denda keterlambatan per hari')
+            ->count());
         $this->assertDatabaseHas('settings', [
             'key' => 'denda_per_hari',
             'value' => '15000',
+        ]);
+        $this->assertDatabaseHas('settings', [
+            'key' => 'denda_rusak_ringan',
+            'value' => '5000',
+        ]);
+        $this->assertDatabaseHas('settings', [
+            'key' => 'denda_rusak_berat',
+            'value' => '10000',
+        ]);
+        $this->assertDatabaseHas('settings', [
+            'key' => 'denda_hilang',
+            'value' => '20000',
         ]);
         $this->assertDatabaseHas('histories', [
             'jenis' => 'perubahan_tarif_denda',
@@ -87,5 +104,63 @@ class HistoryControllerTest extends TestCase
             'judul' => 'Kategori Diperbarui',
             'user_id' => $user->id,
         ]);
+    }
+
+    public function test_history_page_only_displays_requested_activity_types(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($user);
+
+        foreach ([
+            'peminjaman' => 'Riwayat peminjaman tampil',
+            'pengembalian' => 'Riwayat pengembalian tampil',
+            'perubahan_tarif_denda' => 'Riwayat perubahan denda tampil',
+            'kas_keluar' => 'Riwayat kas keluar tampil',
+            'kas_masuk' => 'Riwayat kas masuk tampil',
+            'aktivitas' => 'Riwayat aktivitas tidak tampil',
+        ] as $jenis => $keterangan) {
+            History::create([
+                'jenis' => $jenis,
+                'judul' => $keterangan,
+                'keterangan' => $keterangan,
+                'user_id' => $user->id,
+            ]);
+        }
+
+        $response = $this->get(route('histories.index'))->assertOk();
+
+        $response
+            ->assertSee('Riwayat peminjaman tampil')
+            ->assertSee('Riwayat pengembalian tampil')
+            ->assertSee('Riwayat perubahan denda tampil')
+            ->assertSee('Riwayat kas keluar tampil')
+            ->assertSee('Riwayat kas masuk tampil')
+            ->assertDontSee('Riwayat aktivitas tidak tampil');
+    }
+
+    public function test_navigation_shows_cash_balance_from_incoming_and_outgoing_cash(): void
+    {
+        $user = User::factory()->create(['role' => 'petugas']);
+        $this->actingAs($user);
+
+        History::create([
+            'jenis' => 'kas_masuk',
+            'judul' => 'Pembayaran denda',
+            'keterangan' => 'Pembayaran masuk',
+            'jumlah' => 75000,
+            'user_id' => $user->id,
+        ]);
+        History::create([
+            'jenis' => 'kas_keluar',
+            'judul' => 'Pengeluaran kas',
+            'keterangan' => 'Pembelian alat tulis',
+            'jumlah' => 12500,
+            'user_id' => $user->id,
+        ]);
+
+        $this->get(route('histories.index'))
+            ->assertOk()
+            ->assertSee('Saldo kas', false)
+            ->assertSee('Rp 62.500');
     }
 }

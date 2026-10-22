@@ -24,11 +24,20 @@ class SettingController extends Controller
 
     public function store(Request $request)
     {
-        $dendaPerHari = $request->input('denda_per_hari');
-        if (is_string($dendaPerHari)) {
-            $request->merge([
-                'denda_per_hari' => str_replace('.', '', $dendaPerHari),
-            ]);
+        $fineKeys = [
+            'denda_per_hari',
+            'denda_rusak_ringan',
+            'denda_rusak_berat',
+            'denda_hilang',
+        ];
+
+        foreach ($fineKeys as $fineKey) {
+            $fineValue = $request->input($fineKey);
+            if (is_string($fineValue)) {
+                $request->merge([
+                    $fineKey => str_replace('.', '', $fineValue),
+                ]);
+            }
         }
 
         $data = $request->validate([
@@ -37,11 +46,21 @@ class SettingController extends Controller
             'telepon' => 'nullable|string',
             'email' => 'nullable|email',
             'denda_per_hari' => 'required|numeric|min:0',
+            'denda_rusak_ringan' => 'required|numeric|min:0',
+            'denda_rusak_berat' => 'required|numeric|min:0',
+            'denda_hilang' => 'required|numeric|min:0',
             'lama_pinjam' => 'required|integer|min:1',
             'logo' => 'nullable|image|max:2048',
         ]);
 
-        DB::transaction(function () use ($data) {
+        $fineLabels = [
+            'denda_per_hari' => 'Denda keterlambatan per hari',
+            'denda_rusak_ringan' => 'Denda kerusakan ringan per buku',
+            'denda_rusak_berat' => 'Denda kerusakan berat per buku',
+            'denda_hilang' => 'Denda kehilangan per buku',
+        ];
+
+        DB::transaction(function () use ($data, $fineLabels) {
             foreach ($data as $key => $value) {
                 if ($key === 'logo') {
                     continue;
@@ -57,11 +76,11 @@ class SettingController extends Controller
                     continue;
                 }
 
-                if ($key === 'denda_per_hari') {
+                if (isset($fineLabels[$key])) {
                     History::create([
                         'jenis' => 'perubahan_tarif_denda',
-                        'judul' => 'Tarif denda per hari diubah',
-                        'keterangan' => 'Denda keterlambatan',
+                        'judul' => 'Tarif denda diubah',
+                        'keterangan' => $fineLabels[$key],
                         'nilai_lama' => $oldValue,
                         'nilai_baru' => $value,
                         'user_id' => Auth::id(),

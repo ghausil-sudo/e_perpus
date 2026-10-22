@@ -42,13 +42,15 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $book->author->nama_penulis ?? 'N/A' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $book->tahun_terbit }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $book->tersedia }} / {{ $book->jumlah }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-3">
-                        <a href="{{ route('books.edit', $book) }}" class="text-gray-900 hover:text-gray-700">Edit</a>
-                        <form action="{{ route('books.destroy', $book) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus buku ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-700">Hapus</button>
-                        </form>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="{{ route('books.edit', $book) }}" class="btn-action btn-action--primary">Edit</a>
+                            <form action="{{ route('books.destroy', $book) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus buku ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-action btn-action--danger">Hapus</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty

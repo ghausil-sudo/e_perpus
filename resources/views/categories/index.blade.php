@@ -27,11 +27,13 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $category->kode_kategori }}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">{{ $category->nama_kategori }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <a href="{{ route('categories.edit', $category) }}" class="text-gray-900 hover:text-gray-700 mr-3">Edit</a>
-                        <form action="{{ route('categories.destroy', $category) }}" method="POST" class="inline" onsubmit="return confirm('Hapus kategori ini?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-800">Hapus</button>
-                        </form>
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="{{ route('categories.edit', $category) }}" class="btn-action btn-action--primary">Edit</a>
+                            <form action="{{ route('categories.destroy', $category) }}" method="POST" class="inline" onsubmit="return confirm('Hapus kategori ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn-action btn-action--danger">Hapus</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty

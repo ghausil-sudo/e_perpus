@@ -70,7 +70,6 @@
                                     {{ $history->nilai_lama === null ? 'Belum diatur' : 'Rp ' . number_format((float) $history->nilai_lama, 0, ',', '.') }}
                                     &rarr;
                                     {{ 'Rp ' . number_format((float) $history->nilai_baru, 0, ',', '.') }}
-                                    per hari
                                 </span>
                             @else
                                 {{ $history->keterangan }}

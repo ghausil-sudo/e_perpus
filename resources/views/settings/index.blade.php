@@ -37,6 +37,27 @@
                     <input type="number" name="lama_pinjam" value="{{ old('lama_pinjam', $settings['lama_pinjam'] ?? 7) }}" min="1" required class="input">
                 </div>
             </div>
+            <div class="border-t border-gray-100 pt-5">
+                <h2 class="text-sm font-semibold text-gray-900">Tarif Denda Kondisi Buku</h2>
+                <p class="mt-1 text-xs text-gray-500">Tarif kerusakan dan kehilangan dikenakan untuk setiap buku.</p>
+                <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div>
+                        <label class="label">Rusak Ringan (per buku)</label>
+                        <input type="text" inputmode="numeric" name="denda_rusak_ringan" value="{{ old('denda_rusak_ringan', number_format((float) ($settings['denda_rusak_ringan'] ?? 0), 0, ',', '.')) }}" pattern="[0-9.]+" required class="input">
+                        @error('denda_rusak_ringan') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="label">Rusak Berat (per buku)</label>
+                        <input type="text" inputmode="numeric" name="denda_rusak_berat" value="{{ old('denda_rusak_berat', number_format((float) ($settings['denda_rusak_berat'] ?? 0), 0, ',', '.')) }}" pattern="[0-9.]+" required class="input">
+                        @error('denda_rusak_berat') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="label">Hilang (per buku)</label>
+                        <input type="text" inputmode="numeric" name="denda_hilang" value="{{ old('denda_hilang', number_format((float) ($settings['denda_hilang'] ?? 0), 0, ',', '.')) }}" pattern="[0-9.]+" required class="input">
+                        @error('denda_hilang') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+            </div>
             <div>
                 <label class="label">Logo</label>
                 <input type="file" name="logo" class="input">

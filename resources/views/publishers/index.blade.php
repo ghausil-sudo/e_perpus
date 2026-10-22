@@ -29,11 +29,13 @@
                     <td class="px-6 py-4 text-sm text-gray-700">{{ $publisher->nama_penerbit }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $publisher->telepon ?? '-' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <a href="{{ route('publishers.edit', $publisher) }}" class="text-gray-900 hover:text-gray-700 mr-3">Edit</a>
-                        <form action="{{ route('publishers.destroy', $publisher) }}" method="POST" class="inline" onsubmit="return confirm('Hapus penerbit ini?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-800">Hapus</button>
-                        </form>
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="{{ route('publishers.edit', $publisher) }}" class="btn-action btn-action--primary">Edit</a>
+                            <form action="{{ route('publishers.destroy', $publisher) }}" method="POST" class="inline" onsubmit="return confirm('Hapus penerbit ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn-action btn-action--danger">Hapus</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty

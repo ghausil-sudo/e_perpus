@@ -27,11 +27,13 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $author->kode_penulis }}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">{{ $author->nama_penulis }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <a href="{{ route('authors.edit', $author) }}" class="text-gray-900 hover:text-gray-700 mr-3">Edit</a>
-                        <form action="{{ route('authors.destroy', $author) }}" method="POST" class="inline" onsubmit="return confirm('Hapus penulis ini?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-800">Hapus</button>
-                        </form>
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="{{ route('authors.edit', $author) }}" class="btn-action btn-action--primary">Edit</a>
+                            <form action="{{ route('authors.destroy', $author) }}" method="POST" class="inline" onsubmit="return confirm('Hapus penulis ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn-action btn-action--danger">Hapus</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty

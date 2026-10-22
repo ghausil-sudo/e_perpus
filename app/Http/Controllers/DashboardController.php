@@ -12,6 +12,11 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $user = Auth::user();
+        if ($user && $user->role === 'user') {
+            return redirect()->route('member.dashboard');
+        }
+
         $data = [
             'totalBooks' => Book::sum('jumlah'),
             'totalMembers' => Member::count(),
@@ -22,7 +27,6 @@ class DashboardController extends Controller
             'availableBooks' => Book::sum('tersedia'),
         ];
 
-        $user = Auth::user();
         if ($user && $user->role === 'admin') {
             return view('admin.dashboard.index', $data);
         }

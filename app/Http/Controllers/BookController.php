@@ -5,13 +5,15 @@ use App\Models\Category;
 use App\Models\Author;
 use App\Models\Publisher;
 use App\Models\Shelf;
+use App\Services\ExpireBookings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
-    public function index()
+    public function index(ExpireBookings $expireBookings)
     {
+        $expireBookings->handle();
         $books = Book::with(['category', 'author'])->latest()->paginate(10);
         return view('books.index', compact('books'));
     }
@@ -102,6 +104,10 @@ class BookController extends Controller
 
     public function destroy(Book $book)
     {
+        if ($book->bookings()->whereIn('status', ['menunggu', 'disetujui'])->exists()) {
+            return back()->with('error', 'Tidak dapat menghapus buku karena masih ada booking aktif.');
+        }
+
         $hasActiveLoan = $book->loanDetails()
             ->whereHas('loan', function ($query) {
                 $query->whereNull('tanggal_dikembalikan')

@@ -10,7 +10,16 @@ class HistoryController extends Controller
 {
     public function index()
     {
-        $histories = History::with('user')->latest()->paginate(15);
+        $histories = History::with('user')
+            ->whereIn('jenis', [
+                'peminjaman',
+                'pengembalian',
+                'perubahan_tarif_denda',
+                'kas_keluar',
+                'kas_masuk',
+            ])
+            ->latest()
+            ->paginate(15);
 
         return view('histories.index', compact('histories'));
     }
