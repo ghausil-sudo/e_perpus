@@ -43,6 +43,43 @@
     </div>
 
     <div class="card overflow-hidden">
+        <div class="border-b border-gray-100 px-5 py-4">
+            <h2 class="text-base font-semibold text-gray-900">Keranjang Buku Siap Diambil</h2>
+            <p class="mt-1 text-xs text-gray-500">Buku-buku yang disetujui untuk anggota yang sama digabungkan dalam satu peminjaman.</p>
+        </div>
+        <div class="divide-y divide-gray-100">
+            @forelse($approvedGroups as $group)
+                @php($firstBooking = $group->first())
+                <div class="flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-gray-900">{{ $firstBooking->member->nama ?? 'Anggota tidak tersedia' }} <span class="font-normal text-gray-500">· {{ $group->count() }} buku</span></p>
+                        <ul class="mt-2 space-y-1">
+                            @foreach($group as $booking)
+                                <li class="text-sm text-gray-700">
+                                    {{ $booking->book->judul ?? 'Buku tidak tersedia' }}
+                                    <span class="text-xs text-gray-500">({{ $booking->book->kode_buku ?? '' }})</span>
+                                    <span class="text-xs text-gray-500">· Batas {{ $booking->expires_at->format('d M Y H:i') }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    <a href="{{ route('loans.create', ['booking_id' => $firstBooking->id]) }}" class="btn-action btn-action--primary shrink-0 whitespace-nowrap">
+                        Proses Keranjang ({{ $group->count() }} buku)
+                    </a>
+                </div>
+            @empty
+                <p class="px-5 py-6 text-center text-sm text-gray-500">Belum ada keranjang booking yang disetujui.</p>
+            @endforelse
+        </div>
+        @if($approvedMemberIds->hasPages())
+            <div class="border-t border-gray-100 px-5 py-4">{{ $approvedMemberIds->links() }}</div>
+        @endif
+    </div>
+
+    <div class="card overflow-hidden">
+        <div class="border-b border-gray-100 px-5 py-4">
+            <h2 class="text-base font-semibold text-gray-900">Permohonan dan Riwayat Booking</h2>
+        </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -83,8 +120,6 @@
                                             @csrf @method('PATCH')
                                             <button class="btn-action btn-action--danger" type="submit">Tolak</button>
                                         </form>
-                                    @elseif($booking->status === 'disetujui')
-                                        <a href="{{ route('loans.create', ['booking_id' => $booking->id]) }}" class="btn-action btn-action--primary whitespace-nowrap">Ambil & Buat Peminjaman</a>
                                     @else
                                         <span class="text-xs text-gray-400">{{ $booking->approver->name ?? '' }}</span>
                                     @endif

@@ -88,7 +88,22 @@ class BookingController extends Controller
     public function index(ExpireBookings $expireBookings)
     {
         $expireBookings->handle();
+        $approvedMemberIds = Booking::query()
+            ->where('status', 'disetujui')
+            ->where('expires_at', '>', now())
+            ->select('member_id')
+            ->distinct()
+            ->orderBy('member_id')
+            ->paginate(15, ['member_id'], 'carts_page');
+        $approvedGroups = Booking::with(['member', 'book'])
+            ->whereIn('member_id', $approvedMemberIds->getCollection()->pluck('member_id'))
+            ->where('status', 'disetujui')
+            ->where('expires_at', '>', now())
+            ->oldest()
+            ->get()
+            ->groupBy('member_id');
         $bookings = Booking::with(['member', 'book', 'approver', 'loan'])
+            ->where('status', '!=', 'disetujui')
             ->latest()
             ->paginate(15);
         $pendingAccounts = User::where('role', 'user')
@@ -96,7 +111,7 @@ class BookingController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        return view('bookings.index', compact('bookings', 'pendingAccounts'));
+        return view('bookings.index', compact('bookings', 'pendingAccounts', 'approvedGroups', 'approvedMemberIds'));
     }
 
     public function approve(Booking $booking, ExpireBookings $expireBookings)

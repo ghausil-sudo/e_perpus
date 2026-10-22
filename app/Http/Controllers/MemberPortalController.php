@@ -76,11 +76,18 @@ class MemberPortalController extends Controller
             return redirect()->route('member.dashboard')->with('error', 'Akun Anda masih menunggu dihubungkan ke data anggota oleh petugas.');
         }
 
+        $approvedBookings = Booking::with('book')
+            ->where('member_id', $member->id)
+            ->where('status', 'disetujui')
+            ->oldest()
+            ->get();
+
         $bookings = Booking::with(['book', 'approver', 'loan'])
             ->where('member_id', $member->id)
+            ->where('status', '!=', 'disetujui')
             ->latest()
             ->paginate(12);
 
-        return view('member.bookings', compact('bookings'));
+        return view('member.bookings', compact('bookings', 'approvedBookings'));
     }
 }

@@ -136,11 +136,24 @@ class MemberBookingFlowTest extends TestCase
         $this->assertTrue($booking->expires_at->equalTo($booking->approved_at->copy()->addHours(24)));
         $this->assertSame(1, (int) $book->fresh()->tersedia);
 
-        $this->actingAs($staff)
+        $response = $this->actingAs($staff)
             ->get(route('bookings.index'))
             ->assertOk()
             ->assertSee('Dewi Anggota')
-            ->assertSee('Ambil & Buat Peminjaman', false);
+            ->assertSee('Keranjang Buku Siap Diambil')
+            ->assertSee('Proses Keranjang (3 buku)')
+            ->assertSee($book->kode_buku)
+            ->assertSee($anotherBook->kode_buku)
+            ->assertSee($thirdBook->kode_buku);
+        $this->assertSame(1, substr_count($response->getContent(), 'Proses Keranjang (3 buku)'));
+        $memberBookingsResponse = $this->actingAs($memberAccount)
+            ->get(route('member.bookings'))
+            ->assertOk()
+            ->assertSee('Keranjang Booking Disetujui')
+            ->assertSee($book->kode_buku)
+            ->assertSee($anotherBook->kode_buku)
+            ->assertSee($thirdBook->kode_buku);
+        $this->assertSame(3, substr_count($memberBookingsResponse->getContent(), 'Batalkan Buku'));
 
         Setting::create(['key' => 'lama_pinjam', 'value' => '10']);
         $this->actingAs($staff)
